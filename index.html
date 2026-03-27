@@ -44,6 +44,24 @@
     p {
       margin-bottom: 15px;
     }
+
+    .gallery {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .gallery img {
+      width: 250px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+
+    .caption {
+      font-size: 14px;
+      text-align: center;
+      margin-top: 5px;
+    }
   </style>
 </head>
 <body>
@@ -95,7 +113,31 @@
       <li>Played for Evolution United Football Club</li>
       <li>Studies at Smt. Sulochanadevi Singhania School</li>
     </ul>
+
+    <h2>Proofs of Achievements</h2>
+
+    <h3>Photos</h3>
+
+    <div class="gallery">
+      <div>
+        <img src="proof1.jpg">
+        <div class="caption">HUSO AIR 15 Certificate</div>
+      </div>
+
+      <div>
+        <img src="proof2.jpg">
+        <div class="caption">Kaggle Achievement</div>
+      </div>
+    </div>
+
+    <h3>Videos</h3>
+    <video width="400" controls>
+      <source src="video1.mp4" type="video/mp4">
+    </video>
+
   </section>
 
+</body>
+</html>
 </body>
 </html>
