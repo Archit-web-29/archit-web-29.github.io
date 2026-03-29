@@ -12,4 +12,4 @@
 - Made Version in footer clickable
 
 ## Version 2.0.0
-- Permanently removed version from footer due to it being hard to track
+- Permanently stopped updating update logs due to it being hard to track
