@@ -551,14 +551,15 @@
         }
       });
 
-      // Footnote on "13-year-old"
-      var fnRef = document.getElementById("fn1-ref");
-      var fnText = document.getElementById("fn1");
-      fnRef.addEventListener("click", function () {
-        var open = fnText.classList.toggle("open");
-        fnRef.setAttribute("aria-expanded", open ? "true" : "false");
+      // Footnotes: every button with class "fn" opens the note it points to
+      document.querySelectorAll(".fn").forEach(function (ref) {
+        ref.addEventListener("click", function () {
+          var note = document.getElementById(ref.getAttribute("aria-controls"));
+          if (!note) return;
+          var open = note.classList.toggle("open");
+          ref.setAttribute("aria-expanded", open ? "true" : "false");
+        });
       });
-
       // Highlight the contents entry for the section being read
       if ("IntersectionObserver" in window) {
         var tocLinks = {};
