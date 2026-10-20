@@ -304,6 +304,15 @@
 <p>The paper reports 87% accuracy for adversarial validation on its reasoning tasks, versus 50% for the single-agent baseline and 62% for self-refinement. The author notes that the evaluation is relatively small and that the method increases cost and latency, with its effectiveness dependent on reliable verification.</p>
 <p><a href="Adversarial_Collaboration_Between_AI_Agents_Under_Uncertainty.pdf" target="_blank" rel="noopener">Read the full preprint (PDF)</a></p>
 </section>
+<section id="knowledge-boundaries">
+<h2><span class="n">2</span>Can LLMs Recognize Their Own Knowledge Boundaries?</h2>
+<p class="meta">Archit Ranjan and Adit Maheshwari &middot; Independent researchers &middot; May 2026 &middot; Preprint</p>
+<h3><span class="n">2.1</span>Summary</h3>
+<p>This preprint asks whether a language model can recognize when it should answer a question, abstain because information is unknowable, ask for clarification when important context is missing, or reject a false assumption. Instead of evaluating only factual accuracy, we created a behavioral benchmark covering answerable questions, ambiguity, false premises, epistemic impossibility, logic problems, and uncertainty.</p>
+<p>We evaluated the open-weight model <span class="tt">openai/gpt-oss-120b</span> across 728 responses (722 unique question IDs). It achieved 80.2% overall behavioral accuracy and 94.1% structured-output parse success. The greatest weaknesses were ambiguous questions (32.7% accuracy) and false-premise questions (70.4% accuracy), even though average self-reported confidence was 91.9 out of 100. These findings suggest that recognizing obvious unknowability is easier than knowing when to request missing context or challenge a question's assumptions.</p>
+<p class="note">Limitations: the evaluation used a single model, a manually curated English-language benchmark, single-turn prompts, and self-reported rather than calibrated confidence.</p>
+<p><a href="Can_LLMs_Recognize_Their_Own_Knowledge_Boundaries.pdf" target="_blank" rel="noopener">Read the full preprint (PDF)</a></p>
+</section>
 </main>
 <footer><span>&copy; 2026 Archit Ranjan. Hosted on GitHub Pages.</span><span><a href="index.html">Home</a></span></footer>
 </div>
