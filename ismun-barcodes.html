@@ -3587,6 +3587,400 @@
 </code></pre>
   </details>
 </section>
+    
+<section id="performance" aria-labelledby="h-performance">
+  <h2 id="h-performance">
+    <span class="n">6</span> Performance Testing &amp; Results
+  </h2>
+
+  <p>
+    Building a barcode logging system was one thing.
+    Making sure it stayed fast and reliable under pressure was
+    another. I developed a Python benchmarking program to test
+    the actual application code under different workloads,
+    including large participant rosters, repeated scans,
+    database growth, concurrent operations, and simulated
+    network problems.
+  </p>
+
+  <p>
+    Rather than relying on how fast the system felt, I measured
+    individual operations, screen-update latency, database
+    performance, synchronization, and long-running stability.
+    The complete benchmark finished with
+    <strong>14 passing checks, zero failures, and one
+    scalability warning.</strong>
+  </p>
+
+  <h3><span class="n">6.1</span> Key Performance Results</h3>
+
+  <div class="table-wrap">
+    <table>
+      <caption>
+        Table 1. Selected results from the full benchmark
+        of barcode2.py on macOS.
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Measurement</th>
+          <th scope="col">Result</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Barcode identification, p99</td>
+          <td>0.001 ms</td>
+        </tr>
+        <tr>
+          <td>New meal decision, p99</td>
+          <td>0.007 ms</td>
+        </tr>
+        <tr>
+          <td>Duplicate meal detection, p99</td>
+          <td>0.005 ms</td>
+        </tr>
+        <tr>
+          <td>SQLite durable write, p99</td>
+          <td>0.420 ms</td>
+        </tr>
+        <tr>
+          <td>Scan feedback at 10,000 participants, p99</td>
+          <td>0.338 ms</td>
+        </tr>
+        <tr>
+          <td>Full scan handler at 10,000 participants, p99</td>
+          <td>1.798 ms</td>
+        </tr>
+        <tr>
+          <td>Full-board scan handler, p99</td>
+          <td>3.227 ms</td>
+        </tr>
+        <tr>
+          <td>Virtualized board rendering, p99</td>
+          <td>3.260 ms</td>
+        </tr>
+        <tr>
+          <td>Mouse-wheel scrolling, p99</td>
+          <td>1.677 ms</td>
+        </tr>
+        <tr>
+          <td>Scans synchronized in fake-cloud test</td>
+          <td>700 / 700</td>
+        </tr>
+        <tr>
+          <td>Unsynchronized scans after test</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td>Local processing soak test</td>
+          <td>6,000 scans</td>
+        </tr>
+        <tr>
+          <td>Database scaling test</td>
+          <td>150,000 records</td>
+        </tr>
+        <tr>
+          <td>Largest simulated roster</td>
+          <td>10,000 people</td>
+        </tr>
+        <tr>
+          <td>Full-board state tested</td>
+          <td>60,000 cells</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="note">
+    p99 is the 99th-percentile measurement, meaning approximately
+    99% of recorded operations completed within the stated time.
+    These figures come from local synthetic benchmarks, not
+    physical scanner-to-screen or live Google Sheets timings.
+  </p>
+
+  <h3><span class="n">6.2</span> Scaling to 10,000 Participants</h3>
+
+  <p>
+    One of my main concerns was whether the application would
+    slow down as more delegates were added. To test this, I
+    increased the simulated roster from 200 to 10,000 people
+    and measured how quickly the application updated the screen
+    after a scan.
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <caption>
+        Table 2. Scan-feedback latency across roster sizes.
+        All results are p99, in milliseconds.
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Participants</th>
+          <th scope="col">Feedback</th>
+          <th scope="col">Full handler</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>200</td><td>0.351</td><td>1.893</td></tr>
+        <tr><td>1,000</td><td>0.347</td><td>1.917</td></tr>
+        <tr><td>5,000</td><td>0.333</td><td>1.798</td></tr>
+        <tr><td>10,000</td><td>0.338</td><td>1.798</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>
+    The results were encouraging. Even when the roster grew to
+    10,000 participants, the measured scan-feedback latency
+    remained below 0.4 milliseconds at the 99th percentile.
+    The full handler remained below 2 milliseconds at p99
+    across all four roster sizes.
+  </p>
+
+  <h3><span class="n">6.3</span> Virtualized Dashboard</h3>
+
+  <p>
+    Instead of creating thousands of individual interface
+    widgets, I used a virtualized Tkinter Canvas that only
+    renders the rows currently visible on screen.
+    During testing, the visible area contained 24 row slots,
+    regardless of whether the roster had 100 or 10,000 people.
+  </p>
+
+  <p>
+    Increasing the roster size by a factor of 100 changed
+    the median full-render time by a factor of just
+    <strong>0.99</strong>. The p99 render time at 10,000
+    participants was <strong>3.260 ms</strong>.
+    This showed that dashboard rendering remained nearly
+    constant as the roster grew.
+  </p>
+
+  <h3><span class="n">6.4</span> Testing a Completely Full Board</h3>
+
+  <p>
+    I also tested a worst-case dashboard state where every
+    meal had already been collected. With 5,000 participants
+    and 12 meal categories, that meant 60,000 recorded meal
+    cells.
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <caption>Table 3. Fully populated dashboard performance.</caption>
+      <thead>
+        <tr>
+          <th scope="col">Operation</th>
+          <th scope="col">Result</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Empty-board handler, p99</td>
+          <td>1.769 ms</td>
+        </tr>
+        <tr>
+          <td>Full-board handler, p99</td>
+          <td>3.227 ms</td>
+        </tr>
+        <tr>
+          <td>Additional p99 latency</td>
+          <td>1.458 ms</td>
+        </tr>
+        <tr>
+          <td>Full-board render, p99</td>
+          <td>5.008 ms</td>
+        </tr>
+        <tr>
+          <td>Full-board scrolling, p99</td>
+          <td>1.677 ms</td>
+        </tr>
+        <tr>
+          <td>60,000-cell UI update processing</td>
+          <td>6.86 ms</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>
+    The application remained responsive even with the
+    dashboard completely populated. The p99 full-handler
+    latency increased by approximately 1.46 milliseconds
+    compared with the empty-board test.
+  </p>
+
+  <h3><span class="n">6.5</span> Database Reliability &amp; Scaling</h3>
+
+  <p>
+    Every scan is saved locally using SQLite before
+    being synchronized with Google Sheets. This lets the
+    system keep accepting scans if the internet connection
+    becomes unavailable.
+  </p>
+
+  <p>
+    I benchmarked the database with as many as
+    <strong>150,000 scan records</strong>. Reading a batch
+    of 100 pending scans took approximately 0.103 ms,
+    while counting pending records took approximately
+    0.006 ms at that database size.
+  </p>
+
+  <p>
+    Because the database uses an index for unsynchronized
+    records, these common operations stayed fast even as
+    the overall database became much larger.
+  </p>
+
+  <h3><span class="n">6.6</span> Cloud Synchronization</h3>
+
+  <p>
+    The application uses a background synchronization
+    system that collects pending scans into batches instead
+    of sending every scan as a separate Google Sheets
+    request.
+  </p>
+
+  <p>
+    In a simulated pipeline test, I submitted 700 scans.
+    All 700 eventually reached the fake Google Sheets
+    service, with no scans left waiting to synchronize.
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <caption>
+        Table 4. Background synchronization test
+        using a simulated Google Sheets service.
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Measurement</th>
+          <th scope="col">Result</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Scans offered</td><td>700</td></tr>
+        <tr><td>Scans synchronized</td><td>700</td></tr>
+        <tr><td>Unsynchronized scans remaining</td><td>0</td></tr>
+        <tr><td>Google Sheets append calls simulated</td><td>7</td></tr>
+        <tr><td>Average rows per append</td><td>100</td></tr>
+        <tr><td>Time to fully synchronize</td><td>13.62 s</td></tr>
+        <tr><td>Observed write-call rate</td><td>30.8/min</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>
+    The test demonstrated how batching can reduce the
+    number of API calls while keeping the scanning
+    experience independent of network delays.
+  </p>
+
+  <h3><span class="n">6.7</span> Stress Testing &amp; Stability</h3>
+
+  <p>
+    I wanted to know whether the application would become
+    progressively slower after processing a large number
+    of scans. I therefore ran a soak test that submitted
+    6,000 scans in rapid succession and compared
+    performance at the beginning and end.
+  </p>
+
+  <div class="table-wrap">
+    <table>
+      <caption>Table 5. Local soak-test results.</caption>
+      <thead>
+        <tr>
+          <th scope="col">Measurement</th>
+          <th scope="col">Result</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Simulated scans</td><td>6,000</td></tr>
+        <tr><td>Total test duration</td><td>4.9 s</td></tr>
+        <tr><td>Local processing rate</td><td>1,232 scans/s</td></tr>
+        <tr><td>Overall median handler latency</td><td>0.333 ms</td></tr>
+        <tr><td>Overall p99 handler latency</td><td>2.005 ms</td></tr>
+        <tr><td>Median latency increase</td><td>0.082 ms</td></tr>
+        <tr><td>Local database size</td><td>1.03 MB</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>
+    The median handler latency increased by only
+    0.082 ms between the first and last portions of
+    the test. This suggested that the main scan-processing
+    path remained stable during the simulated burst.
+  </p>
+
+  <p class="note">
+    The 1,232 scans/s figure represents synthetic local
+    processing throughput, not physical barcode scanning
+    capacity or cloud synchronization throughput.
+  </p>
+
+  <h3><span class="n">6.8</span> Testing Failure Scenarios</h3>
+
+  <p>
+    I also tested what happens when normal storage or
+    synchronization is unavailable. The application includes
+    a local SQLite queue, an emergency JSONL fallback,
+    and an in-memory queue as a last resort.
+  </p>
+
+  <p>
+    In the benchmark, emergency JSONL writes achieved
+    a p99 latency of <strong>0.082 ms</strong>, while
+    reconciliation with a simulated offline backlog
+    of 10,000 records took approximately
+    <strong>45.6 ms at p99</strong>.
+  </p>
+
+  <p>
+    These tests helped me evaluate how the application
+    behaves under degraded conditions rather than only
+    when everything is working normally.
+  </p>
+
+  <h3><span class="n">6.9</span> What I Learned</h3>
+
+  <p>
+    The biggest lesson from this project was that
+    optimization should be driven by measurements.
+    Moving scan decisions into memory, storing data
+    locally before synchronizing, batching API writes,
+    and virtualizing the dashboard all helped keep
+    the application responsive in the benchmark.
+  </p>
+
+  <p>
+    The main scalability limitation I identified was
+    Google Sheets polling. At 40,000 historical scan
+    records, rereading the complete log every five
+    seconds produces approximately 3.55 MB of data
+    per station per poll. Incremental synchronization
+    would be an improvement for larger deployments.
+  </p>
+
+  <p>
+    The full benchmark completed with
+    <strong>14 passing checks, zero failures, and one
+    scalability warning</strong>. It also confirmed
+    that no production files were modified and that
+    no real Google Sheets API calls were made.
+  </p>
+
+  <p class="meta">
+    Environment: Python 3.11.9, macOS.
+    Benchmark date: October 20, 2026.
+    Tests used synthetic data and a mocked Google Sheets
+    service where applicable.
+  </p>
+</section>
 </main>
 <footer><span>&copy; 2026 Archit Ranjan. Hosted on GitHub Pages.</span><span><a href="index.html">Home</a></span></footer>
 </div>
